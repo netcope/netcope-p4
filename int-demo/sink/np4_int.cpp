@@ -47,6 +47,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
+#include <netinet/tcp.h>
 
 // Netcope P4 library
 #include <libnp4.h>
@@ -58,19 +59,32 @@
  */
 typedef struct __attribute__((__packed__)) np4_int_header {
     uint32_t                source_ip[4];
+
     uint32_t                destination_ip[4];
+
     uint16_t                source_port;
     uint16_t                destination_port;
+
     uint8_t                 ip_ver;
     uint8_t                 l4_proto;
-    uint16_t                reserved16_1;
+    uint16_t                reserved16_3;
+
     uint8_t                 int_length;
     uint8_t                 int_inscnt   : 5;
     uint8_t                 int_vld      : 1;
-    uint8_t                 int_hop1_vld : 1;
-    uint8_t                 int_hop0_vld : 1;
+    uint8_t                 reserved2_4  : 2;
     uint16_t                int_insmap;
-    uint32_t                reserved32_1;
+
+
+    uint8_t                 int_hop0_vld : 1;
+    uint8_t                 int_hop1_vld : 1;
+    uint8_t                 int_hop2_vld : 1;
+    uint8_t                 int_hop3_vld : 1;
+    uint8_t                 int_hop4_vld : 1;
+    uint8_t                 int_hop5_vld : 1;
+    uint8_t                 reserved2_5  : 2;
+    uint8_t                 reserved8_5;
+    uint16_t                reserved16_5;
 
     uint32_t                int_hop0_swid;
     uint16_t                int_hop0_ingressport;
@@ -95,6 +109,54 @@ typedef struct __attribute__((__packed__)) np4_int_header {
     uint32_t                int_hop1_congestion_queueid    : 8;
     uint32_t                int_hop1_congestion_congestion : 24;
     uint32_t                int_hop1_egressporttxutilization;
+
+    uint32_t                int_hop2_swid;
+    uint16_t                int_hop2_ingressport;
+    uint16_t                int_hop2_egressport;
+    uint32_t                int_hop2_hoplatency;
+    uint32_t                int_hop2_occupancy_queueid   : 8;
+    uint32_t                int_hop2_occupancy_occupancy : 24;
+    uint32_t                int_hop2_ingresstimestamp;
+    uint32_t                int_hop2_egresstimestamp;
+    uint32_t                int_hop2_congestion_queueid    : 8;
+    uint32_t                int_hop2_congestion_congestion : 24;
+    uint32_t                int_hop2_egressporttxutilization;
+
+    uint32_t                int_hop3_swid;
+    uint16_t                int_hop3_ingressport;
+    uint16_t                int_hop3_egressport;
+    uint32_t                int_hop3_hoplatency;
+    uint32_t                int_hop3_occupancy_queueid   : 8;
+    uint32_t                int_hop3_occupancy_occupancy : 24;
+    uint32_t                int_hop3_ingresstimestamp;
+    uint32_t                int_hop3_egresstimestamp;
+    uint32_t                int_hop3_congestion_queueid    : 8;
+    uint32_t                int_hop3_congestion_congestion : 24;
+    uint32_t                int_hop3_egressporttxutilization;
+
+    uint32_t                int_hop4_swid;
+    uint16_t                int_hop4_ingressport;
+    uint16_t                int_hop4_egressport;
+    uint32_t                int_hop4_hoplatency;
+    uint32_t                int_hop4_occupancy_queueid   : 8;
+    uint32_t                int_hop4_occupancy_occupancy : 24;
+    uint32_t                int_hop4_ingresstimestamp;
+    uint32_t                int_hop4_egresstimestamp;
+    uint32_t                int_hop4_congestion_queueid    : 8;
+    uint32_t                int_hop4_congestion_congestion : 24;
+    uint32_t                int_hop4_egressporttxutilization;
+
+    uint32_t                int_hop5_swid;
+    uint16_t                int_hop5_ingressport;
+    uint16_t                int_hop5_egressport;
+    uint32_t                int_hop5_hoplatency;
+    uint32_t                int_hop5_occupancy_queueid   : 8;
+    uint32_t                int_hop5_occupancy_occupancy : 24;
+    uint32_t                int_hop5_ingresstimestamp;
+    uint32_t                int_hop5_egresstimestamp;
+    uint32_t                int_hop5_congestion_queueid    : 8;
+    uint32_t                int_hop5_congestion_congestion : 24;
+    uint32_t                int_hop5_egressporttxutilization;
 } np4_int_header_t;
 
 /**
@@ -279,7 +341,7 @@ void np4_processing(np4_t* np4, arguments const &args) {
             // New Netcope P4 input
             if(data) {
                 // Check length of Netcope INT header
-                if (data_len == 128) {
+                if (data_len == 256) {
                     // Parse Netcope P4 input into Netcope P4 header and Netcope INT header
                     err = np4_parse_frame(data, &np4_hdr, (unsigned char **) &np4_int_hdr, &frame_len);
                     if (err) {
@@ -340,6 +402,58 @@ void np4_processing(np4_t* np4, arguments const &args) {
                                 if (np4_int_hdr->int_insmap & 0x0200) std::cout << "\t\tQueue congestion    : " << np4_int_hdr->int_hop1_congestion_queueid << " : " << np4_int_hdr->int_hop1_congestion_congestion << std::endl;
                                 if (np4_int_hdr->int_insmap & 0x0100) std::cout << "\t\tEgress port TX util.: " << np4_int_hdr->int_hop1_egressporttxutilization << std::endl;
                             }
+                            // If INT Hop 2 was detected
+                            if (np4_int_hdr->int_hop2_vld) {
+                                std::cout << "\tINT hop 2:" << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x8000) std::cout << "\t\tSwitch ID           : " << np4_int_hdr->int_hop2_swid << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tIngress port        : " << np4_int_hdr->int_hop2_ingressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tEgress port         : " << np4_int_hdr->int_hop2_egressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x2000) std::cout << "\t\tHop latency         : " << np4_int_hdr->int_hop2_hoplatency << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x1000) std::cout << "\t\tQueue occupancy     : " << np4_int_hdr->int_hop2_occupancy_queueid << " : " << np4_int_hdr->int_hop2_occupancy_occupancy << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0800) std::cout << "\t\tIngress timestamp   : " << np4_int_hdr->int_hop2_ingresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0400) std::cout << "\t\tEgress timestamp    : " << np4_int_hdr->int_hop2_egresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0200) std::cout << "\t\tQueue congestion    : " << np4_int_hdr->int_hop2_congestion_queueid << " : " << np4_int_hdr->int_hop2_congestion_congestion << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0100) std::cout << "\t\tEgress port TX util.: " << np4_int_hdr->int_hop2_egressporttxutilization << std::endl;
+                            }
+                            // If INT Hop 3 was detected
+                            if (np4_int_hdr->int_hop3_vld) {
+                                std::cout << "\tINT hop 3:" << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x8000) std::cout << "\t\tSwitch ID           : " << np4_int_hdr->int_hop3_swid << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tIngress port        : " << np4_int_hdr->int_hop3_ingressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tEgress port         : " << np4_int_hdr->int_hop3_egressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x2000) std::cout << "\t\tHop latency         : " << np4_int_hdr->int_hop3_hoplatency << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x1000) std::cout << "\t\tQueue occupancy     : " << np4_int_hdr->int_hop3_occupancy_queueid << " : " << np4_int_hdr->int_hop3_occupancy_occupancy << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0800) std::cout << "\t\tIngress timestamp   : " << np4_int_hdr->int_hop3_ingresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0400) std::cout << "\t\tEgress timestamp    : " << np4_int_hdr->int_hop3_egresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0200) std::cout << "\t\tQueue congestion    : " << np4_int_hdr->int_hop3_congestion_queueid << " : " << np4_int_hdr->int_hop3_congestion_congestion << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0100) std::cout << "\t\tEgress port TX util.: " << np4_int_hdr->int_hop3_egressporttxutilization << std::endl;
+                            }
+                            // If INT Hop 4 was detected
+                            if (np4_int_hdr->int_hop4_vld) {
+                                std::cout << "\tINT hop 4:" << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x8000) std::cout << "\t\tSwitch ID           : " << np4_int_hdr->int_hop4_swid << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tIngress port        : " << np4_int_hdr->int_hop4_ingressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tEgress port         : " << np4_int_hdr->int_hop4_egressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x2000) std::cout << "\t\tHop latency         : " << np4_int_hdr->int_hop4_hoplatency << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x1000) std::cout << "\t\tQueue occupancy     : " << np4_int_hdr->int_hop4_occupancy_queueid << " : " << np4_int_hdr->int_hop4_occupancy_occupancy << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0800) std::cout << "\t\tIngress timestamp   : " << np4_int_hdr->int_hop4_ingresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0400) std::cout << "\t\tEgress timestamp    : " << np4_int_hdr->int_hop4_egresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0200) std::cout << "\t\tQueue congestion    : " << np4_int_hdr->int_hop4_congestion_queueid << " : " << np4_int_hdr->int_hop4_congestion_congestion << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0100) std::cout << "\t\tEgress port TX util.: " << np4_int_hdr->int_hop4_egressporttxutilization << std::endl;
+                            }
+                            // If INT Hop 5 was detected
+                            if (np4_int_hdr->int_hop5_vld) {
+                                std::cout << "\tINT hop 5:" << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x8000) std::cout << "\t\tSwitch ID           : " << np4_int_hdr->int_hop5_swid << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tIngress port        : " << np4_int_hdr->int_hop5_ingressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x4000) std::cout << "\t\tEgress port         : " << np4_int_hdr->int_hop5_egressport << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x2000) std::cout << "\t\tHop latency         : " << np4_int_hdr->int_hop5_hoplatency << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x1000) std::cout << "\t\tQueue occupancy     : " << np4_int_hdr->int_hop5_occupancy_queueid << " : " << np4_int_hdr->int_hop5_occupancy_occupancy << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0800) std::cout << "\t\tIngress timestamp   : " << np4_int_hdr->int_hop5_ingresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0400) std::cout << "\t\tEgress timestamp    : " << np4_int_hdr->int_hop5_egresstimestamp << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0200) std::cout << "\t\tQueue congestion    : " << np4_int_hdr->int_hop5_congestion_queueid << " : " << np4_int_hdr->int_hop5_congestion_congestion << std::endl;
+                                if (np4_int_hdr->int_insmap & 0x0100) std::cout << "\t\tEgress port TX util.: " << np4_int_hdr->int_hop5_egressporttxutilization << std::endl;
+                            }
                         } else {
                             std::cout << "\tINT not detected." << std::endl;
                         }
@@ -367,7 +481,7 @@ void np4_processing(np4_t* np4, arguments const &args) {
                         struct iphdr *ip_in = (struct iphdr *) &(buffer[54]);
                         ip_in->ihl = 5; // Static
                         ip_in->version = 4; // Static
-                        ip_in->tos = 0x80; // Static
+                        ip_in->tos = 0x04; // Static
                         ip_in->tot_len = 0; // Actual length is used
                         ip_in->id = 0; // Static
                         ip_in->frag_off = htons(0x4000); // Static
@@ -377,22 +491,48 @@ void np4_processing(np4_t* np4, arguments const &args) {
                         ip_in->saddr = htonl(np4_int_hdr->source_ip[0]);
                         ip_in->daddr = htonl(np4_int_hdr->destination_ip[0]);
 
-                        // Prepare UDP header
-                        struct udphdr *udp_in = (struct udphdr *) &(buffer[74]);
-                        udp_in->source = htons(np4_int_hdr->source_port);
-                        udp_in->dest = htons(np4_int_hdr->destination_port);
-                        udp_in->len = 0; // Actual length is used
-                        udp_in->check = 0; // Static
+                        unsigned l4_in_size;
+                        struct tcphdr *tcp_in;
+                        struct udphdr *udp_in;
+                        if (ip_in->protocol == 6) {
+                            l4_in_size = 20;
+                            // Prepare TCP header
+                            tcp_in = (struct tcphdr *) &(buffer[74]);
+                            tcp_in->source = htons(np4_int_hdr->source_port);
+                            tcp_in->dest = htons(np4_int_hdr->destination_port);
+                            tcp_in->seq = 0;
+                            tcp_in->ack_seq = 0;
+                            tcp_in->res1 = 0;
+                            tcp_in->doff = 5;
+                            tcp_in->fin = 0;
+                            tcp_in->syn = 0;
+                            tcp_in->rst = 0;
+                            tcp_in->psh = 0;
+                            tcp_in->ack = 0;
+                            tcp_in->urg = 0;
+                            tcp_in->res2 = 0;
+                            tcp_in->window = 0;
+                            tcp_in->check = 0;
+                            tcp_in->urg_ptr = 0;
+                        } else {
+                            l4_in_size = 8;
+                            // Prepare UDP header
+                            udp_in = (struct udphdr *) &(buffer[74]);
+                            udp_in->source = htons(np4_int_hdr->source_port);
+                            udp_in->dest = htons(np4_int_hdr->destination_port);
+                            udp_in->len = 0; // Actual length is used
+                            udp_in->check = 0; // Static
+                        }
 
                         // Prepare INT Shim header
-                        struct int_shim *int_sh = (struct int_shim *) &(buffer[82]);
+                        struct int_shim *int_sh = (struct int_shim *) &(buffer[74+l4_in_size]);
                         int_sh->type = 1; // Static
                         int_sh->res1 = 0;
                         int_sh->length = np4_int_hdr->int_length;
                         int_sh->res2 = 0;
 
                         // Prepare INT header
-                        struct int_hdr *int_h = (struct int_hdr *) &(buffer[82+4]);
+                        struct int_hdr *int_h = (struct int_hdr *) &(buffer[74+l4_in_size+4]);
                         int_h->ver = 0; // Static
                         int_h->res4 = 0;
                         int_h->ins_cnt = np4_int_hdr->int_inscnt;
@@ -401,10 +541,66 @@ void np4_processing(np4_t* np4, arguments const &args) {
                         int_h->total_hop_cnt = 0; // Static
                         if (np4_int_hdr->int_hop0_vld) int_h->total_hop_cnt++;
                         if (np4_int_hdr->int_hop1_vld) int_h->total_hop_cnt++;
+                        if (np4_int_hdr->int_hop2_vld) int_h->total_hop_cnt++;
+                        if (np4_int_hdr->int_hop3_vld) int_h->total_hop_cnt++;
+                        if (np4_int_hdr->int_hop4_vld) int_h->total_hop_cnt++;
+                        if (np4_int_hdr->int_hop5_vld) int_h->total_hop_cnt++;
                         int_h->instr_bitmap = htons(np4_int_hdr->int_insmap);
                         int_h->reserved = 0;
 
-                        unsigned index = 82+4+8;
+                        unsigned index = 74+l4_in_size+4+8;
+                        if (np4_int_hdr->int_hop5_vld) {
+                            if (np4_int_hdr->int_insmap & 0x8000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop5_swid); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop5_ingressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop5_egressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x2000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop5_hoplatency); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop5_occupancy_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop5_occupancy_occupancy)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0800) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop5_ingresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0400) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop5_egresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop5_congestion_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop5_congestion_congestion)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0100) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop5_egressporttxutilization); index += 4; }
+                        }
+                        if (np4_int_hdr->int_hop4_vld) {
+                            if (np4_int_hdr->int_insmap & 0x8000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop4_swid); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop4_ingressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop4_egressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x2000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop4_hoplatency); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop4_occupancy_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop4_occupancy_occupancy)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0800) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop4_ingresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0400) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop4_egresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop4_congestion_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop4_congestion_congestion)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0100) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop4_egressporttxutilization); index += 4; }
+                        }
+                        if (np4_int_hdr->int_hop3_vld) {
+                            if (np4_int_hdr->int_insmap & 0x8000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop3_swid); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop3_ingressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop3_egressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x2000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop3_hoplatency); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop3_occupancy_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop3_occupancy_occupancy)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0800) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop3_ingresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0400) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop3_egresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop3_congestion_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop3_congestion_congestion)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0100) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop3_egressporttxutilization); index += 4; }
+                        }
+                        if (np4_int_hdr->int_hop2_vld) {
+                            if (np4_int_hdr->int_insmap & 0x8000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop2_swid); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop2_ingressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop2_egressport); index += 2; }
+                            if (np4_int_hdr->int_insmap & 0x2000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop2_hoplatency); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop2_occupancy_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x1000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop2_occupancy_occupancy)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0800) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop2_ingresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0400) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop2_egresstimestamp); index += 4; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint8_t  *) &(buffer[index])) = np4_int_hdr->int_hop2_congestion_queueid; index += 1; }
+                            if (np4_int_hdr->int_insmap & 0x0200) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop2_congestion_congestion)>>8; index += 3; }
+                            if (np4_int_hdr->int_insmap & 0x0100) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop2_egressporttxutilization); index += 4; }
+                        }
                         if (np4_int_hdr->int_hop1_vld) {
                             if (np4_int_hdr->int_insmap & 0x8000) { *((uint32_t *) &(buffer[index])) = htonl(np4_int_hdr->int_hop1_swid); index += 4; }
                             if (np4_int_hdr->int_insmap & 0x4000) { *((uint16_t *) &(buffer[index])) = htons(np4_int_hdr->int_hop1_ingressport); index += 2; }
@@ -433,23 +629,23 @@ void np4_processing(np4_t* np4, arguments const &args) {
                         }
 
                         // Prepare INT Tail header
-                        struct int_tail *int_tl = (struct int_tail *) &(buffer[82+(np4_int_hdr->int_length<<2)-4]);
+                        struct int_tail *int_tl = (struct int_tail *) &(buffer[74+l4_in_size+(int_sh->length<<2)-4]);
                         int_tl->proto = ip_in->protocol;
-                        int_tl->dport = udp_in->dest;
+                        int_tl->dport = (ip_in->protocol == 6) ? tcp_in->dest : udp_in->dest;
                         int_tl->dscp = 0; // Static
 
                         // Prepare payload
-                        char *payload = (char *) &(buffer[82+(np4_int_hdr->int_length<<2)]);
+                        char *payload = (char *) &(buffer[74+l4_in_size+(int_sh->length<<2)]);
                         strncpy(payload, "Hello World", 11);
 
                         // Update lengths and checksums
-                        udp->len = htons(8+12+14+20+8+(np4_int_hdr->int_length<<2)+11);
-                        ip_in->tot_len = htons(20+8+(np4_int_hdr->int_length<<2)+11);
+                        udp->len = htons(8+12+14+20+l4_in_size+(int_sh->length<<2)+11);
+                        ip_in->tot_len = htons(20+l4_in_size+(int_sh->length<<2)+11);
                         ip_in->check = ip_checksum(ip_in, 20);
-                        udp_in->len = htons(8+(np4_int_hdr->int_length<<2)+11);
+                        if (ip_in->protocol == 17) udp_in->len = htons(l4_in_size+(int_sh->length<<2)+11);
 
                         // Send Telemetry report
-                        if (sendto(sock, buffer, 20+8+12+14+20+8+(np4_int_hdr->int_length<<2)+11, 0 , (struct sockaddr *) &sockaddr, sizeof(sockaddr)) == -1)
+                        if (sendto(sock, buffer, 20+8+12+14+20+l4_in_size+(int_sh->length<<2)+11, 0 , (struct sockaddr *) &sockaddr, sizeof(sockaddr)) == -1)
                         {
                             throw std::string("Packet send error");
                         }
@@ -488,143 +684,211 @@ inline void np4_preparation(arguments &args, np4_t **np4) {
     if(err)
         throw np4_print_error(err);
 
-    // Clear all tables (to not interfere with the rules we are about to load)
-    np4_core_reset(*np4);
+    // Enable TX
+    err = np4_tx_enable(*np4);
+    if(err)
+        throw np4_print_error(err);
 
-    // Netcope P4 rule
+    // Clear all tables (to not interfere with the rules we are about to load)
+    //np4_core_reset(*np4, 0);
+
+    // Create Netcope P4 ruleset
+    np4_ruleset_t *ruleset = np4_ruleset_create(*np4, 0);
     np4_rule_t *rule;
 
     // Setting Netcope P4 tables
     if (args.original) {
         //// tab_remove_int
-        // 1. Create rule datatype (with set table and index within the table)
-        rule = np4_rule_create("tab_remove_int",0);
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_remove_int");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
         // 2. Set action of the rule
         err = np4_rule_set_action(rule,"permit");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 3. Add rule
-        err = np4_core_add_rule(*np4,rule);
-        if(err) {
-            np4_rule_free(rule);
-            throw np4_print_error(err);
-        }
-        // 4. Free rule
-        np4_rule_free(rule);
 
         //// tab_update_enc_L4
-        // 1. Create rule datatype (with set table and index within the table)
-        rule = np4_rule_create("tab_update_enc_L4",0);
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_update_enc_L4");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
         // 2. Set action of the rule
         err = np4_rule_set_action(rule,"permit");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 3. Add rule
-        err = np4_core_add_rule(*np4,rule);
-        if(err) {
-            np4_rule_free(rule);
-            throw np4_print_error(err);
-        }
-        // 4. Free rule
-        np4_rule_free(rule);
 
         //// tab_update_L4
-        // 1. Create rule datatype (with set table and index within the table)
-        rule = np4_rule_create("tab_update_L4",0);
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_update_L4");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
         // 2. Set action of the rule
         err = np4_rule_set_action(rule,"permit");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 3. Add rule
-        err = np4_core_add_rule(*np4,rule);
+
+        //// tab_terminate_gtp
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_terminate_gtp");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 4. Free rule
-        np4_rule_free(rule);
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        // 2. Set action of the rule
+        err = np4_rule_set_action(rule,"permit");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+
     } else {
         //// tab_remove_int
-        // 1. Create rule datatype (with set table and index within the table)
-        rule = np4_rule_create("tab_remove_int",0);
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_remove_int");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
         // 2. Set action of the rule
         err = np4_rule_set_action(rule,"act_remove_int");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 3. Add rule
-        err = np4_core_add_rule(*np4,rule);
-        if(err) {
-            np4_rule_free(rule);
-            throw np4_print_error(err);
-        }
-        // 4. Free rule
-        np4_rule_free(rule);
 
         //// tab_update_enc_L4
-        // 1. Create rule datatype (with set table and index within the table)
-        rule = np4_rule_create("tab_update_enc_L4",0);
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_update_enc_L4");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
         // 2. Set action of the rule
         err = np4_rule_set_action(rule,"update_enc_L4");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 3. Add rule
-        err = np4_core_add_rule(*np4,rule);
-        if(err) {
-            np4_rule_free(rule);
-            throw np4_print_error(err);
-        }
-        // 4. Free rule
-        np4_rule_free(rule);
 
         //// tab_update_L4
-        // 1. Create rule datatype (with set table and index within the table)
-        rule = np4_rule_create("tab_update_L4",0);
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_update_L4");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
         // 2. Set action of the rule
         err = np4_rule_set_action(rule,"update_L4");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 3. Add rule
-        err = np4_core_add_rule(*np4,rule);
+
+        //// tab_terminate_gtp
+        // 1. Create default rule
+        err = np4_rule_create(&rule, ruleset, "tab_terminate_gtp");
         if(err) {
-            np4_rule_free(rule);
+            np4_ruleset_free(ruleset);
             throw np4_print_error(err);
         }
-        // 4. Free rule
-        np4_rule_free(rule);
+        err = np4_rule_mark_default(rule);
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
+        // 2. Set action of the rule
+        err = np4_rule_set_action(rule,"terminate_gtp");
+        if(err) {
+            np4_ruleset_free(ruleset);
+            throw np4_print_error(err);
+        }
     }
 
     //// tab_send
-    // 1. Create rule datatype (with set table and index within the table)
-    rule = np4_rule_create("tab_send",0);
+    // 1. Create default rule
+    err = np4_rule_create(&rule, ruleset, "tab_send");
+    if(err) {
+        np4_ruleset_free(ruleset);
+        throw np4_print_error(err);
+    }
+    err = np4_rule_mark_default(rule);
+    if(err) {
+        np4_ruleset_free(ruleset);
+        throw np4_print_error(err);
+    }
     // 2. Set action of the rule
-    err = np4_rule_set_action(rule,"send_to_dma");
+    err = np4_rule_set_action(rule,"send_to_port");
     if(err) {
-        np4_rule_free(rule);
+        np4_ruleset_free(ruleset);
         throw np4_print_error(err);
     }
-    // 3. Add rule
-    err = np4_core_add_rule(*np4,rule);
+    uint8_t port[1] = { 1 };
+    err = np4_rule_add_action_parameter(rule, "port", port, 1);
     if(err) {
-        np4_rule_free(rule);
+        np4_ruleset_free(ruleset);
         throw np4_print_error(err);
     }
-    // 4. Free rule
-    np4_rule_free(rule);
+
+    // Insert Netcope P4 ruleset to hadrware
+    err = np4_core_insert_ruleset(*np4, 0, ruleset);
+    if(err) {
+        np4_ruleset_free(ruleset);
+        throw np4_print_error(err);
+    }
+
+    // Free ruleset
+    np4_ruleset_free(ruleset);
 
     // Enable Netcope P4
-    err = np4_core_enable(*np4);
+    err = np4_core_enable(*np4, 0);
     if(err)
         throw np4_print_error(err);
 }

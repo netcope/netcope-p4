@@ -1,5 +1,5 @@
 //
-// top.p4: Main file and control flow definitions of Netcope P4 INT processing example.
+// top.p4: Main file and control flow definitions of Netcope P4 INT sink processing example.
 // Copyright (C) 2018 Netcope Technologies, a.s.
 // Author(s): Michal Kekely <kekely@netcope.com>
 //
@@ -26,7 +26,7 @@
 #include "tables.p4"
 #include "calculated_fields.p4"
 
-@pragma core_identification Netcope-P4-INT-1.2
+@pragma core_identification Netcope-P4-INT-sink-2.0
 control ingress {
 	if (valid(int_tail)) {
 		apply(tab_remove_int);
@@ -35,6 +35,9 @@ control ingress {
 		} else {
 			apply(tab_update_L4);
 		}
+	}
+	if (valid(gtp)) {
+		apply(tab_terminate_gtp);
 	}
 	apply(tab_send);
 }

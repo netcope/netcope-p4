@@ -1,5 +1,5 @@
 //
-// tables.p4: MAT definitions of Netcope P4 INT processing example.
+// tables.p4: MAT definitions of Netcope P4 INT sink processing example.
 // Copyright (C) 2018 Netcope Technologies, a.s.
 // Author(s): Michal Kekely <kekely@netcope.com>
 //
@@ -30,20 +30,52 @@ action act_remove_int() {
     remove_header(int_header);
     remove_header(int_switch_id_0);
     remove_header(int_port_ids_0);
-    remove_header(int_hop_latency_0);
+    //remove_header(int_hop_latency_0);
     remove_header(int_q_occupancy_0);
     remove_header(int_ingress_tstamp_0);
-    remove_header(int_egress_tstamp_0);
-    remove_header(int_q_congestion_0);
-    remove_header(int_egress_port_tx_util_0);
+    //remove_header(int_egress_tstamp_0);
+    //remove_header(int_q_congestion_0);
+    //remove_header(int_egress_port_tx_util_0);
     remove_header(int_switch_id_1);
     remove_header(int_port_ids_1);
-    remove_header(int_hop_latency_1);
+    //remove_header(int_hop_latency_1);
     remove_header(int_q_occupancy_1);
     remove_header(int_ingress_tstamp_1);
-    remove_header(int_egress_tstamp_1);
-    remove_header(int_q_congestion_1);
-    remove_header(int_egress_port_tx_util_1);
+    //remove_header(int_egress_tstamp_1);
+    //remove_header(int_q_congestion_1);
+    //remove_header(int_egress_port_tx_util_1);
+    remove_header(int_switch_id_2);
+    remove_header(int_port_ids_2);
+    //remove_header(int_hop_latency_2);
+    remove_header(int_q_occupancy_2);
+    remove_header(int_ingress_tstamp_2);
+    //remove_header(int_egress_tstamp_2);
+    //remove_header(int_q_congestion_2);
+    //remove_header(int_egress_port_tx_util_2);
+    remove_header(int_switch_id_3);
+    remove_header(int_port_ids_3);
+    //remove_header(int_hop_latency_3);
+    remove_header(int_q_occupancy_3);
+    remove_header(int_ingress_tstamp_3);
+    //remove_header(int_egress_tstamp_3);
+    //remove_header(int_q_congestion_3);
+    //remove_header(int_egress_port_tx_util_3);
+    //remove_header(int_switch_id_4);
+    //remove_header(int_port_ids_4);
+    ////remove_header(int_hop_latency_4);
+    //remove_header(int_q_occupancy_4);
+    //remove_header(int_ingress_tstamp_4);
+    ////remove_header(int_egress_tstamp_4);
+    ////remove_header(int_q_congestion_4);
+    ////remove_header(int_egress_port_tx_util_4);
+    remove_header(int_switch_id_5);
+    remove_header(int_port_ids_5);
+    //remove_header(int_hop_latency_5);
+    remove_header(int_q_occupancy_5);
+    remove_header(int_ingress_tstamp_5);
+    //remove_header(int_egress_tstamp_5);
+    //remove_header(int_q_congestion_5);
+    //remove_header(int_egress_port_tx_util_5);
 }
 
 // Drop the packet
@@ -64,10 +96,15 @@ action send_to_eth() {
      modify_field(intrinsic_metadata.egress_port,0);
 }
 
+action send_to_port(port) {
+    modify_field(intrinsic_metadata.egress_port,port);
+}
+
 action update_L4() {
     modify_field(ipv4.protocol,int_tail.next_proto);
     modify_field(ipv4.dscp,int_tail.dscp);
     modify_field(udp.dstPort,int_tail.dest_port);
+    modify_field(tcp.dstPort,int_tail.dest_port);
     modify_field(md_netcope.L4proto,int_tail.next_proto);
     modify_field(md_netcope.L4dst,int_tail.dest_port);
     // Update lengths
@@ -79,13 +116,15 @@ action update_L4() {
     subtract_from_field(udp.len,internal_metadata.INTlenB);
     // Update checksums
     modify_field_with_hash_based_offset(ipv4.hdrChecksum,0,ipv4_csum,65536);
+    modify_field(udp.csum,0);
+    modify_field(tcp.csum,0);
 }
 
 action update_enc_L4() {
     modify_field(enc_ipv4.protocol,int_tail.next_proto);
     modify_field(enc_ipv4.dscp,int_tail.dscp);
     modify_field(enc_udp.dstPort,int_tail.dest_port);
-    modify_field(enc_tcp.dstPort,int_tail.dest_port);
+    modify_field(tcp.dstPort,int_tail.dest_port);
     modify_field(md_netcope.L4proto,int_tail.next_proto);
     modify_field(md_netcope.L4dst,int_tail.dest_port);
     // Update lengths
@@ -100,6 +139,15 @@ action update_enc_L4() {
     // Update checksums
     modify_field_with_hash_based_offset(ipv4.hdrChecksum,0,ipv4_csum,65536);
     modify_field_with_hash_based_offset(enc_ipv4.hdrChecksum,0,enc_ipv4_csum,65536);
+    modify_field(udp.csum,0);
+    modify_field(tcp.csum,0);
+    modify_field(enc_udp.csum,0);
+}
+
+action terminate_gtp() {
+    remove_header(gtp);
+    remove_header(udp);
+    remove_header(ipv4);
 }
 
 // Tables ======================================================================
@@ -138,5 +186,15 @@ table tab_send {
         permit;
         send_to_dma;
         send_to_eth;
+        send_to_port;
+    }
+}
+
+// Unpack GTP
+table tab_terminate_gtp {
+    // No reads statement, always run default action
+    actions {
+        permit;
+        terminate_gtp;
     }
 }

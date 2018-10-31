@@ -1,5 +1,5 @@
 //
-// calculated_fields.p4: Calculated fields of Netcope P4 INT processing example.
+// calculated_fields.p4: Calculated fields of Netcope P4 INT sink processing example.
 // Copyright (C) 2018 Netcope Technologies, a.s.
 // Author(s): Michal Kekely <kekely@netcope.com>
 //

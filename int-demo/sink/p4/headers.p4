@@ -1,5 +1,5 @@
 //
-// headers.p4: Header definitions of Netcope P4 INT processing example.
+// headers.p4: Header definitions of Netcope P4 INT sink processing example.
 // Copyright (C) 2018 Netcope Technologies, a.s.
 // Author(s): Michal Kekely <kekely@netcope.com>
 //
@@ -80,8 +80,8 @@ header_type tcp_t {
         urgPoint    : 16;
     }
 
-    length          : (dataOffset)*4;
-    max_length      : 60;
+    //length          : (dataOffset)*4;
+    //max_length      : 60;
 }
 
 header_type udp_t {
@@ -195,6 +195,7 @@ header_type int_q_occupancy_t {
 header_type int_ingress_tstamp_t {
     fields {
         ingress_tstamp  : 32;
+        egress_tstamp   : 32;
     }
 }
 
@@ -224,6 +225,10 @@ header_type netcope_metadata_t {
         valid_int       : 1;
         hop0_vld        : 1;
         hop1_vld        : 1;
+        hop2_vld        : 1;
+        hop3_vld        : 1;
+        hop4_vld        : 1;
+        hop5_vld        : 1;
         IPsrc           : 32;
         IPdst           : 32;
         IPver           : 8;
