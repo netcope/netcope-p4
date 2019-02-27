@@ -1,0 +1,19 @@
+table_set_default table_mac_filter _drop
+table_set_default table_rss update_egress_spec 0
+table_add table_mac_filter compute_rss 00:60:08:9f:b1:f3 =>
+table_add table_rss update_egress_spec 0 => 128
+table_add table_rss update_egress_spec 1 => 129
+table_add table_rss update_egress_spec 2 => 130
+table_add table_rss update_egress_spec 3 => 131
+table_add table_rss update_egress_spec 4 => 132
+table_add table_rss update_egress_spec 5 => 133
+table_add table_rss update_egress_spec 6 => 134
+table_add table_rss update_egress_spec 7 => 135
+table_add table_rss update_egress_spec 8 => 128
+table_add table_rss update_egress_spec 9 => 129
+table_add table_rss update_egress_spec 10 => 130
+table_add table_rss update_egress_spec 11 => 131
+table_add table_rss update_egress_spec 12 => 132
+table_add table_rss update_egress_spec 13 => 133
+table_add table_rss update_egress_spec 14 => 134
+table_add table_rss update_egress_spec 15 => 135

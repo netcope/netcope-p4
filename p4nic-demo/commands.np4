@@ -1,0 +1,20 @@
+NP4 ruleset 2.0
+table_mac_filter default action drop
+table_rss default action update_egress_spec params ( spec 128 )
+table_mac_filter keys ( ethernet.dstAddr 0,96,8,159,177,243 ) action compute_rss
+table_rss keys ( packet_metadata.rss_index 0 ) action update_egress_spec params ( spec 128 )
+table_rss keys ( packet_metadata.rss_index 1 ) action update_egress_spec params ( spec 129 )
+table_rss keys ( packet_metadata.rss_index 2 ) action update_egress_spec params ( spec 130 )
+table_rss keys ( packet_metadata.rss_index 3 ) action update_egress_spec params ( spec 131 )
+table_rss keys ( packet_metadata.rss_index 4 ) action update_egress_spec params ( spec 132 )
+table_rss keys ( packet_metadata.rss_index 5 ) action update_egress_spec params ( spec 133 )
+table_rss keys ( packet_metadata.rss_index 6 ) action update_egress_spec params ( spec 134 )
+table_rss keys ( packet_metadata.rss_index 7 ) action update_egress_spec params ( spec 135 )
+table_rss keys ( packet_metadata.rss_index 8 ) action update_egress_spec params ( spec 128 )
+table_rss keys ( packet_metadata.rss_index 9 ) action update_egress_spec params ( spec 129 )
+table_rss keys ( packet_metadata.rss_index 10 ) action update_egress_spec params ( spec 130 )
+table_rss keys ( packet_metadata.rss_index 11 ) action update_egress_spec params ( spec 131 )
+table_rss keys ( packet_metadata.rss_index 12 ) action update_egress_spec params ( spec 132 )
+table_rss keys ( packet_metadata.rss_index 13 ) action update_egress_spec params ( spec 133 )
+table_rss keys ( packet_metadata.rss_index 14 ) action update_egress_spec params ( spec 134 )
+table_rss keys ( packet_metadata.rss_index 15 ) action update_egress_spec params ( spec 135 )
