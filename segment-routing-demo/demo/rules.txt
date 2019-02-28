@@ -1,0 +1,5 @@
+NP4 ruleset 2.0
+tab_rewrite default action rewrite
+#table_set_egress_port default action permit
+table_set_egress_port default action set_egress_port params ( eport 0,0,0,0,0,128 )
+table_set_egress_port keys ( ipv6.dstAddr 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8:0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255 ) action set_egress_port params ( eport 1,2,3,4,5,129 )

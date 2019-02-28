@@ -1,0 +1,5 @@
+1. Configure demo by editing config.cfg 
+  CARD_DEVICE_FILE - device file of the card you want to use (/dev/alt_pf<NUM>)
+  RX_NETDEV - network device used to receive data from card to SW
+  TX_NETDEV - network device used to send the data from SW to card
+2. Run demo by running run.sh or run-hash.sh

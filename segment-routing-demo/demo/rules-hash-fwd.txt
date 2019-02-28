@@ -1,0 +1,3 @@
+NP4 ruleset 2.0
+tab_rewrite default action rewrite
+table_set_egress_port default action forward_based_on_hash
