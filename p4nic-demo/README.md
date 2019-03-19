@@ -30,4 +30,4 @@ The list of files:
   * _p4/:_ folder with P4 source code files
 
 [WiresharkCaptures]: https://wiki.wireshark.org/SampleCaptures
-[NetcopeWhitepaper]: https://www.netcope.com/en/company/press-center
+[NetcopeWhitepaper]: https://netcope.com/en/resources/building-a-nic-with-netcope-p4
