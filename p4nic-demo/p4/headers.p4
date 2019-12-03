@@ -66,9 +66,6 @@ header_type ipv4_t {
         srcAddr : 32;
         dstAddr: 32;
     }
-    
-    length: (ihl)*4;
-    max_length: 60;
 }
 
 // Full version of IPv6 ========================================================
